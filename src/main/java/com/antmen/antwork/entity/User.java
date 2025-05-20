@@ -1,21 +1,25 @@
 package com.antmen.antwork.entity;
+import com.antmen.antwork.customer.dto.UserUpdateDto;
 import jakarta.persistence.*;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
+
 import java.time.LocalDate;
 
 @Entity
 @Table(name = "user")
 @Getter
-@Setter
-@NoArgsConstructor
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
+@AllArgsConstructor
+@Builder
 public class User {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id")
-    private int id;
+    private Long id;
+
+    @Column(name="login_id")
+    private String loginId;
 
     @Column(name = "phone_number")
     private String phoneNumber;
@@ -41,7 +45,25 @@ public class User {
     @Column(name = "point_balance")
     private int pointBalance;
 
+    @Column(name = "status")
+    private int status; // 탈퇴 여부
+
 //    @Column(name = "black_list")
 //    private Integer blackList; //blacklist 객체 생성
+
+    public void updateUser(UserUpdateDto dto) {
+        this.name = dto.getName();
+        this.email = dto.getEmail();
+        this.phoneNumber = dto.getPhoneNumber();
+        this.password = dto.getPassword();
+        this.address = dto.getAddress();
+        this.birthDate = dto.getBirthDate();
+        this.gender = dto.getGender();
+    }
+
+    public void deleteUser() {
+        this.status = 0;
+    }
+
 
 }
