@@ -2,8 +2,13 @@ name: "CI/CD: Build & Deploy to EC2"
 
 on:
   pull_request:
-    types: [closed] 
-    branches: [develop]
+    # develop 브랜치로 들어오는 PR(open/reopen/synchronize)에만 실행
+    branches:
+      - develop
+  push:
+    branches:
+      - develop
+
 
 jobs:
   build:

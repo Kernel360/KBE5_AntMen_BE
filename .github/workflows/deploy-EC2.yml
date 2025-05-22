@@ -1,8 +1,12 @@
 name: Deploy to EC2
 
 on:
+  pull_request:
+    branches:
+      - main
   push:
-    branches: [lock]
+    branches:
+      - main
 
 jobs:
   build:
