@@ -40,31 +40,37 @@ public class BoardController {
 
     @PutMapping("/{id}")
     public ResponseEntity<BoardResponseDto> boardUpdate(HttpServletRequest request, BoardRequestDto boardRequestDto, @PathVariable Long id) {
+        Long userId = (Long) request.getSession().getAttribute("userId");
         return ResponseEntity.status(HttpStatus.OK).body(boardService.boardRead(id));
     }
 
     @DeleteMapping("/{id}")
     public ResponseEntity boardDelete(HttpServletRequest request, @PathVariable Long id) {
+        Long userId = (Long) request.getSession().getAttribute("userId");
         return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
     }
 
     @PostMapping("/{boardId}")
     public ResponseEntity commentWrite(HttpServletRequest request, @PathVariable Long boardId, CommentRequestDto commentRequestDto) {
+        Long userId = (Long) request.getSession().getAttribute("userId");
 
     }
 
     @PutMapping("/{boardId}/{commentId}")
     public ResponseEntity commentUpdate(HttpServletRequest request, @PathVariable Long commentId, CommentRequestDto commentRequestDto) {
+        Long userId = (Long) request.getSession().getAttribute("userId");
 
     }
 
     @DeleteMapping("/{boardId}/{commentId}")
     public ResponseEntity commentDelete(HttpServletRequest request, @PathVariable Long commentId, CommentRequestDto commentRequestDto) {
+        Long userId = (Long) request.getSession().getAttribute("userId");
 
     }
 
     @PostMapping("/{boardId}/{commentId}")
     public ResponseEntity subcommentWrite(HttpServletRequest request, @PathVariable Long commentId, CommentRequestDto commentRequestDto) {
+        Long userId = (Long) request.getSession().getAttribute("userId");
 
     }
 }

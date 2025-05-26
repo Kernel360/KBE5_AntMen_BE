@@ -51,10 +51,24 @@ public class BoardService {
         return boardMapper.toResponseDto(board);
     }
 
-    public ResponseEntity<BoardResponseDto> boardUpdate(Long id, BoardRequestDto boardRequestDto) {
-        return ResponseEntity.ok().build();
-    }
+    public BoardResponseDto boardUpdate(Long userId, Long boardId, BoardRequestDto boardRequestDto) {
+        Board board = boardRepository.findById(boardId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "게시글을 찾을 수 없습니다."));
 
+        if (board.getIsDeleted()) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "삭제된 게시글 입니다.");
+        }
+
+        if (board.getBoardUser().getUserId() != userId){
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "본인이 작성한 글만 수정가능합니다.");
+        }
+
+        board.setBoardTitle(boardRequestDto.getBoardTitle());
+        board.setBoardContent(boardRequestDto.getBoardContent());
+        board.setIsPinned(boardRequestDto.getBoardIsPinned());
+
+        return boardMapper.toResponseDto(board);
+    }
 
 //    @Transactional
 //    public BoardResponseDto updateBoard(Long boardId, UpdateBoardRequestDto request) {
