@@ -10,9 +10,15 @@ import com.antmen.antwork.common.domain.entity.Comment;
 import com.antmen.antwork.common.exception.CommentNotFoundException;
 import com.antmen.antwork.common.exception.UnauthorizedException;
 import com.antmen.antwork.common.infra.repository.CommentRepository;
-
+import com.antmen.antwork.common.domain.entity.Board;
+import com.antmen.antwork.common.exception.BoardNotFoundException;
+import com.antmen.antwork.common.infra.repository.BoardRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+
+
+import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -20,25 +26,37 @@ import lombok.extern.slf4j.Slf4j;
 public class CommentService {
 
     private final CommentRepository commentRepository;
-
+    private final BoardRepository boardRepository;
     @Transactional
-    public CommentResponseDto createComment(CreateCommentRequestDto request) {
+    public CommentResponseDto createComment(Long boardId, CreateCommentRequestDto request) {
         try {
-            Comment comment = Comment.builder()
-                    .commentContent(request.getCommentContent())
-                    .isDeleted(false)
-                    .build();
+            Comment.CommentBuilder builder = Comment.builder()
+                .commentContent(request.getCommentContent())
+                .isDeleted(false);
 
+            // 부모 댓글이 있으면 설정
+            if (request.getParentCommentId() != null) {
+                Comment parent = commentRepository.findById(request.getParentCommentId())
+                    .orElseThrow(() -> new CommentNotFoundException(request.getParentCommentId()));
+                builder.parentComment(parent);
+            }
+
+            // boardId로 Board 엔티티 조회 후 설정 필요
+            Board board = boardRepository.findById(boardId)
+                .orElseThrow(() -> new BoardNotFoundException(boardId));
+            builder.board(board);
+
+            Comment comment = builder.build();
             commentRepository.save(comment);
 
             return CommentResponseDto.builder()
-                    .msg("댓글 생성에 성공했습니다.")
-                    .build();
+                .msg("댓글 생성에 성공했습니다.")
+                .build();
         } catch (Exception e) {
             log.error("댓글 생성에 실패했습니다.", e);
             return CommentResponseDto.builder()
-                    .msg("댓글 생성에 실패했습니다: " + e.getMessage())
-                    .build();
+                .msg("댓글 생성에 실패했습니다: " + e.getMessage())
+                .build();
         }
     }
 
@@ -115,6 +133,24 @@ public class CommentService {
             return CommentResponseDto.builder()
                 .msg("댓글 삭제에 실패했습니다: " + e.getMessage())
                 .build();
+        }
+    }
+
+    @Transactional(readOnly = true)
+    public List<CommentResponseDto> getComments(Long boardId) {
+        try {
+            return commentRepository.findAll().stream()
+                .filter(comment -> !comment.getIsDeleted() && comment.getBoard().getBoardId().equals(boardId))
+                .map(comment -> CommentResponseDto.builder()
+                    .commentId(comment.getCommentId())
+                    .commentContent(comment.getCommentContent())
+                    .createdAt(comment.getCreatedAt() != null ? comment.getCreatedAt().toLocalTime() : null)
+                    .modifiedAt(comment.getUpdatedAt() != null ? comment.getUpdatedAt().toLocalTime() : null)
+                    .build())
+                .collect(Collectors.toList());
+        } catch (Exception e) {
+            log.error("댓글 목록 조회에 실패했습니다.", e);
+            return List.of();
         }
     }
 } 

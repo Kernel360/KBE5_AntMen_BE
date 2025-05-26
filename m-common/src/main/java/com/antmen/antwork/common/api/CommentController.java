@@ -10,25 +10,34 @@ import com.antmen.antwork.common.service.CommentService;
 
 import lombok.RequiredArgsConstructor;
 
+import java.util.List;
+
 @RestController
-@RequestMapping("/api/v1/comment")
+@RequestMapping("/api/v1")
 @RequiredArgsConstructor
 public class CommentController {
 
     private final CommentService commentService;
 
-    @PostMapping
-    public ResponseEntity<CommentResponseDto> createComment(@RequestBody CreateCommentRequestDto request) {
-        CommentResponseDto response = commentService.createComment(request);
+    @PostMapping("/board/{boardId}/comments")
+    public ResponseEntity<CommentResponseDto> createComment(
+            @PathVariable Long boardId,
+            @RequestBody CreateCommentRequestDto request) {
+        CommentResponseDto response = commentService.createComment(boardId, request);
         return ResponseEntity.ok(response);
     }
 
-    @GetMapping("/{commentId}")
+    @GetMapping("/board/{boardId}/comments")
+    public ResponseEntity<List<CommentResponseDto>> getComments(@PathVariable Long boardId) {
+        return ResponseEntity.ok(commentService.getComments(boardId));
+    }
+
+    @GetMapping("/comments/{commentId}")
     public ResponseEntity<CommentResponseDto> getComment(@PathVariable Long commentId) {
         return ResponseEntity.ok(commentService.getComment(commentId));
     }
 
-    @PutMapping("/{commentId}")
+    @PutMapping("/comments/{commentId}")
     public ResponseEntity<CommentResponseDto> updateComment(
             @PathVariable Long commentId,
             @RequestBody UpdateCommentRequestDto request) {
@@ -36,8 +45,8 @@ public class CommentController {
         return ResponseEntity.ok(response);
     }
 
-    @DeleteMapping("/{commentId}")
+    @DeleteMapping("/comments/{commentId}")
     public ResponseEntity<CommentResponseDto> deleteComment(@PathVariable Long commentId) {
         return ResponseEntity.ok(commentService.deleteComment(commentId));
     }
-} 
+}
