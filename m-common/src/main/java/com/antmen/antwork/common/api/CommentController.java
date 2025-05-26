@@ -3,8 +3,6 @@ package com.antmen.antwork.common.api;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import com.antmen.antwork.common.api.request.CreateCommentRequestDto;
-import com.antmen.antwork.common.api.request.UpdateCommentRequestDto;
 import com.antmen.antwork.common.api.response.CommentResponseDto;
 import com.antmen.antwork.common.service.CommentService;
 
@@ -15,7 +13,6 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/v1")
 @RequiredArgsConstructor
-public class CommentController {
 
     private final CommentService commentService;
 

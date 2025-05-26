@@ -3,8 +3,6 @@ package com.antmen.antwork.common.service;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.antmen.antwork.common.api.request.CreateCommentRequestDto;
-import com.antmen.antwork.common.api.request.UpdateCommentRequestDto;
 import com.antmen.antwork.common.api.response.CommentResponseDto;
 import com.antmen.antwork.common.domain.entity.Comment;
 import com.antmen.antwork.common.exception.CommentNotFoundException;

@@ -5,6 +5,7 @@ import lombok.Getter;
 import lombok.AllArgsConstructor;
 import lombok.NoArgsConstructor;
 import java.time.LocalTime;
+import java.util.List;
 
 @Getter
 @AllArgsConstructor
@@ -12,8 +13,9 @@ import java.time.LocalTime;
 @Builder
 public class CommentResponseDto {
     private Long commentId;
+    private String userName;
     private String commentContent;
     private LocalTime createdAt;
     private LocalTime modifiedAt;
-    private String msg; // 단건 응답용
+    private List<CommentResponseDto> subComments;
 } 

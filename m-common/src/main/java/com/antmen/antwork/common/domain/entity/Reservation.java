@@ -61,7 +61,7 @@ public class Reservation {
             mappedBy = "reservation",
             cascade = CascadeType.ALL
     )
-    private List<Matching> matchings = new ArrayList<>();
+    private List<Matching> matchings;
 
     @OneToOne(
             mappedBy = "reservation",

@@ -1,26 +1,22 @@
 package com.antmen.antwork.common.api.response;
 
-import com.antmen.antwork.common.domain.entity.Board;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
-import lombok.Setter;
-import lombok.ToString;
+import lombok.NoArgsConstructor;
 
-import java.util.List;
+import java.time.LocalTime;
 
 @Getter
-@Setter
-@ToString
+@AllArgsConstructor
+@NoArgsConstructor
 @Builder
 public class BoardListResponseDto {
-
-    private List<BoardBar> boards;
-
-    @Getter
-    @Setter
-    @ToString
-    public class BoardBar {
-        private String boardTitle;
-        private String userName;
-    }
+    private Long boardId;
+    private String userName;
+    private String boardTitle;
+    private LocalTime createdAt;
+    private LocalTime modifiedAt;
+    private Boolean isPinned;
+    private Boolean isDeleted;
 }

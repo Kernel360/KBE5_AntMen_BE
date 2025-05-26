@@ -10,8 +10,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.bind.annotation.RequestBody;
 
-import com.antmen.antwork.common.api.request.CreateBoardRequestDto;
-import com.antmen.antwork.common.api.request.UpdateBoardRequestDto;
 import com.antmen.antwork.common.api.response.BoardResponseDto;
 import com.antmen.antwork.common.service.BoardService;
 import java.util.List;
