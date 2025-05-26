@@ -14,7 +14,8 @@ import com.antmen.antwork.common.exception.UnauthorizedException;
 import com.antmen.antwork.common.infra.repository.BoardRepository;
 import com.antmen.antwork.common.service.mapper.BoardMapper;
 import java.time.LocalTime;
-
+import java.util.List;
+import java.util.stream.Collectors;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -143,6 +144,28 @@ public class BoardService {
             return BoardResponseDto.builder()
                 .msg("게시글 삭제에 실패했습니다: " + e.getMessage())
                 .build();
+        }
+    }
+
+    @Transactional(readOnly = true)
+    public List<BoardResponseDto> getBoards() {
+        try {
+            return boardRepository.findAll().stream()
+                .filter(board -> !board.getIsDeleted())
+                .map(board -> BoardResponseDto.builder()
+                    .boardId(board.getBoardId())
+                    .boardType(board.getBoardType())
+                    .boardTitle(board.getBoardTitle())
+                    .boardContent(board.getBoardContent())
+                    .createdAt(board.getCreatedAt())
+                    .modifiedAt(board.getModifiedAt())
+                    .isPinned(board.getIsPinned())
+                    .build())
+                .collect(Collectors.toList());
+        } catch (Exception e) {
+            log.error("게시글 목록 조회에 실패했습니다.", e);
+            // 실패 시에는 빈 리스트 반환 또는 예외 throw
+            return List.of();
         }
     }
 }

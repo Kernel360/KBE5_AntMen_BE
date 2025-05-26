@@ -4,12 +4,16 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.AllArgsConstructor;
 import lombok.NoArgsConstructor;
+import java.time.LocalTime;
 
 @Getter
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
 public class CommentResponseDto {
-   private String msg;
-}
-}
+    private Long commentId;
+    private String commentContent;
+    private LocalTime createdAt;
+    private LocalTime modifiedAt;
+    private String msg; // 단건 응답용
+} 

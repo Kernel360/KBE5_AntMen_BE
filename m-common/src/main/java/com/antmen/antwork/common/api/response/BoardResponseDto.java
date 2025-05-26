@@ -10,5 +10,12 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @Builder
 public class BoardResponseDto {
-
+    private Long boardId;
+    private String boardType;
+    private String boardTitle;
+    private String boardContent;
+    private LocalTime createdAt;
+    private LocalTime modifiedAt;
+    private Boolean isPinned;
+    private String msg; // 단건 응답용
 }

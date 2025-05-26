@@ -14,6 +14,7 @@ import com.antmen.antwork.common.api.request.CreateBoardRequestDto;
 import com.antmen.antwork.common.api.request.UpdateBoardRequestDto;
 import com.antmen.antwork.common.api.response.BoardResponseDto;
 import com.antmen.antwork.common.service.BoardService;
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/v1/board")
@@ -48,5 +49,10 @@ public class BoardController {
     public ResponseEntity<BoardResponseDto> deleteBoard(
             @PathVariable Long boardId) {
         return ResponseEntity.ok(boardService.deleteBoard(boardId));
+    }
+
+    @GetMapping("/list")
+    public ResponseEntity<List<BoardResponseDto>> getBoards() {
+        return ResponseEntity.ok(boardService.getBoards());
     }
 }
