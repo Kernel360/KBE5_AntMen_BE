@@ -3,8 +3,10 @@ package com.antmen.antwork.customer;
 import io.github.cdimascio.dotenv.Dotenv;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.autoconfigure.domain.EntityScan;
 
 @SpringBootApplication
+@EntityScan(basePackages = {"com.antmen.antwork"})
 public class CustomerApplication {
 
     public static void main(String[] args) {

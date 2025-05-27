@@ -4,7 +4,7 @@ import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.ColumnDefault;
 
-import java.time.LocalTime;
+import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "board")
@@ -32,15 +32,16 @@ public class Board {
     private String boardContent;
 
     @Column(nullable = false, updatable = false)
-    private LocalTime createdAt;
+    private LocalDateTime boardCreatedAt;
 
     @Column(nullable = false)
-    private LocalTime modifiedAt;
+    private LocalDateTime boardModifiedAt;
 
     @Column(nullable = false)
     @ColumnDefault("false")
     private Boolean isPinned;
 
     @Column(nullable = false)
-    private Boolean isDeleted;
+    @ColumnDefault("false")
+    private Boolean boardIsDeleted;
 }

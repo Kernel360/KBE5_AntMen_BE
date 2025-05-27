@@ -4,6 +4,8 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.AllArgsConstructor;
 import lombok.NoArgsConstructor;
+
+import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.List;
 
@@ -15,7 +17,7 @@ public class CommentResponseDto {
     private Long commentId;
     private String userName;
     private String commentContent;
-    private LocalTime createdAt;
-    private LocalTime modifiedAt;
+    private LocalDateTime createdAt;
+    private LocalDateTime modifiedAt;
     private List<CommentResponseDto> subComments;
 } 

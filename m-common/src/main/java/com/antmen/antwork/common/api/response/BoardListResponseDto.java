@@ -5,6 +5,7 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
+import java.time.LocalDateTime;
 import java.time.LocalTime;
 
 @Getter
@@ -15,8 +16,8 @@ public class BoardListResponseDto {
     private Long boardId;
     private String userName;
     private String boardTitle;
-    private LocalTime createdAt;
-    private LocalTime modifiedAt;
+    private LocalDateTime createdAt;
+    private LocalDateTime modifiedAt;
     private Boolean isPinned;
     private Boolean isDeleted;
 }

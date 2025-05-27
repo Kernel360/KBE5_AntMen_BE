@@ -1,154 +1,82 @@
 package com.antmen.antwork.common.service;
 
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
+import com.antmen.antwork.common.api.request.CommentRequestDto;
 import com.antmen.antwork.common.api.response.CommentResponseDto;
-import com.antmen.antwork.common.domain.entity.Comment;
-import com.antmen.antwork.common.exception.CommentNotFoundException;
-import com.antmen.antwork.common.exception.UnauthorizedException;
-import com.antmen.antwork.common.infra.repository.CommentRepository;
 import com.antmen.antwork.common.domain.entity.Board;
-import com.antmen.antwork.common.exception.BoardNotFoundException;
+import com.antmen.antwork.common.domain.entity.Comment;
+import com.antmen.antwork.common.domain.entity.User;
 import com.antmen.antwork.common.infra.repository.BoardRepository;
+import com.antmen.antwork.common.infra.repository.CommentRepository;
+import com.antmen.antwork.common.infra.repository.UserRepository;
+import com.antmen.antwork.common.service.mapper.CommentMapper;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-
-
-import java.util.List;
-import java.util.stream.Collectors;
+import org.springframework.http.HttpStatus;
+import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
 
 @Service
 @RequiredArgsConstructor
-@Slf4j
 public class CommentService {
-
     private final CommentRepository commentRepository;
+    private final CommentMapper commentMapper;
+    private final UserRepository userRepository;
     private final BoardRepository boardRepository;
-    @Transactional
-    public CommentResponseDto createComment(Long boardId, CreateCommentRequestDto request) {
-        try {
-            Comment.CommentBuilder builder = Comment.builder()
-                .commentContent(request.getCommentContent())
-                .isDeleted(false);
 
-            // 부모 댓글이 있으면 설정
-            if (request.getParentCommentId() != null) {
-                Comment parent = commentRepository.findById(request.getParentCommentId())
-                    .orElseThrow(() -> new CommentNotFoundException(request.getParentCommentId()));
-                builder.parentComment(parent);
-            }
-
-            // boardId로 Board 엔티티 조회 후 설정 필요
-            Board board = boardRepository.findById(boardId)
-                .orElseThrow(() -> new BoardNotFoundException(boardId));
-            builder.board(board);
-
-            Comment comment = builder.build();
-            commentRepository.save(comment);
-
-            return CommentResponseDto.builder()
-                .msg("댓글 생성에 성공했습니다.")
-                .build();
-        } catch (Exception e) {
-            log.error("댓글 생성에 실패했습니다.", e);
-            return CommentResponseDto.builder()
-                .msg("댓글 생성에 실패했습니다: " + e.getMessage())
-                .build();
-        }
+    public CommentResponseDto commentWrite(Long userId, Long boardId, CommentRequestDto commentRequestDto) {
+        User user = userRepository.findById(userId).get();
+        Board board = boardRepository.findById(boardId).get();
+        Comment newComment = commentRepository.save(commentMapper.toEntity(board, user, commentRequestDto));
+        return commentMapper.toResponseDto(newComment);
     }
 
-    @Transactional(readOnly = true)
-    public CommentResponseDto getComment(Long commentId) {
-        try {
-            Comment comment = commentRepository.findById(commentId)
-                    .orElseThrow(() -> new CommentNotFoundException(commentId));
+    public CommentResponseDto commentUpdate(Long userId, Long commentId, CommentRequestDto commentRequestDto) {
+        Comment comment = commentRepository.findById(commentId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "댓글을 찾을 수 없습니다."));
 
-            if (comment.getIsDeleted()) {
-                throw new CommentNotFoundException(commentId);
-            }
-
-            return CommentResponseDto.builder().msg("댓글 조회에 성공했습니다.").build();
-        } catch (CommentNotFoundException e) {
-            throw e;
-        } catch (Exception e) {
-            throw new RuntimeException("댓글 조회에 실패했습니다.", e);
+        if (comment.getCommentIsDeleted()) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "삭제된 댓글입니다.");
         }
+
+        if (comment.getCommentUser().getUserId() != userId) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "본인이 작성한 댓글만 수정 가능합니다.");
+        }
+
+        comment.setCommentContent(commentRequestDto.getContent());
+
+        return commentMapper.toResponseDto(comment);
     }
 
-    @Transactional
-    public CommentResponseDto updateComment(Long commentId, UpdateCommentRequestDto request) {
-        try {
-            Comment comment = commentRepository.findById(commentId)
-                    .orElseThrow(() -> new CommentNotFoundException(commentId));
+    public void commentDelete(Long userId, Long commentId) {
+        Comment comment = commentRepository.findById(commentId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "댓글을 찾을 수 없습니다."));
 
-            // if (!comment.getUserId().equals(userId)) {
-            //     throw new UnauthorizedException("댓글 수정 권한이 없습니다.");
-            // }
-
-            comment.setCommentContent(request.getCommentContent());
-            // comment.setModifiedAt(LocalDateTime.now()); // 필요시 추가
-
-            return CommentResponseDto.builder()
-                .msg("댓글 수정에 성공했습니다.")
-                .build();
-        } catch (CommentNotFoundException | UnauthorizedException e) {
-            log.warn("댓글 수정 권한 또는 댓글 없음: {}", e.getMessage());
-            return CommentResponseDto.builder()
-                .msg(e.getMessage())
-                .build();
-        } catch (Exception e) {
-            log.error("댓글 수정에 실패했습니다.", e);
-            return CommentResponseDto.builder()
-                .msg("댓글 수정에 실패했습니다: " + e.getMessage())
-                .build();
+        if (comment.getCommentIsDeleted()) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "이미 삭제된 댓글입니다.");
         }
+
+        if (comment.getCommentUser().getUserId() != userId) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "본인이 작성한 댓글만 삭제 가능합니다.");
+        }
+
+        comment.setCommentIsDeleted(true);
     }
 
-    @Transactional
-    public CommentResponseDto deleteComment(Long commentId) {
-        try {
-            Comment comment = commentRepository.findById(commentId)
-                    .orElseThrow(() -> new CommentNotFoundException(commentId));
-
-            // if (!comment.getUserId().equals(userId)) {
-            //     throw new UnauthorizedException("댓글 삭제 권한이 없습니다.");
-            // }
-
-            comment.setIsDeleted(true);
-            // comment.setModifiedAt(LocalDateTime.now()); // 필요시 추가
-
-            return CommentResponseDto.builder()
-                .msg("댓글 삭제에 성공했습니다.")
-                .build();
-        } catch (CommentNotFoundException | UnauthorizedException e) {
-            log.warn("댓글 삭제 권한 또는 댓글 없음: {}", e.getMessage());
-            return CommentResponseDto.builder()
-                .msg(e.getMessage())
-                .build();
-        } catch (Exception e) {
-            log.error("댓글 삭제에 실패했습니다.", e);
-            return CommentResponseDto.builder()
-                .msg("댓글 삭제에 실패했습니다: " + e.getMessage())
-                .build();
+    public CommentResponseDto subCommentWrite(Long userId, Long boardId, Long commentId, CommentRequestDto commentRequestDto) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "사용자를 찾을 수 없습니다."));
+        
+        Board board = boardRepository.findById(boardId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "게시글을 찾을 수 없습니다."));
+        
+        Comment parentComment = commentRepository.findById(commentId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "부모 댓글을 찾을 수 없습니다."));
+        
+        // 부모 댓글과 게시글이 일치하는지 확인
+        if (!parentComment.getBoard().getBoardId().equals(boardId)) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "댓글이 해당 게시글에 속하지 않습니다.");
         }
+        
+        Comment newComment = commentRepository.save(commentMapper.toEntity(board, user, parentComment, commentRequestDto));
+        return commentMapper.toResponseDto(newComment);
     }
-
-    @Transactional(readOnly = true)
-    public List<CommentResponseDto> getComments(Long boardId) {
-        try {
-            return commentRepository.findAll().stream()
-                .filter(comment -> !comment.getIsDeleted() && comment.getBoard().getBoardId().equals(boardId))
-                .map(comment -> CommentResponseDto.builder()
-                    .commentId(comment.getCommentId())
-                    .commentContent(comment.getCommentContent())
-                    .createdAt(comment.getCreatedAt() != null ? comment.getCreatedAt().toLocalTime() : null)
-                    .modifiedAt(comment.getUpdatedAt() != null ? comment.getUpdatedAt().toLocalTime() : null)
-                    .build())
-                .collect(Collectors.toList());
-        } catch (Exception e) {
-            log.error("댓글 목록 조회에 실패했습니다.", e);
-            return List.of();
-        }
-    }
-} 
+}

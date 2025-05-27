@@ -42,19 +42,20 @@ public class Comment {
 
     @CreationTimestamp
     @Column(nullable = false, updatable = false)
-    private LocalDateTime createdAt;
+    private LocalDateTime commentCreatedAt;
 
     @UpdateTimestamp
     @Column(nullable = false)
-    private LocalDateTime updatedAt;
+    private LocalDateTime commentModifiedAt;
 
     @Column(nullable = false)
     @ColumnDefault("false")
-    private Boolean isDeleted;
+    private Boolean commentIsDeleted;
 
     @OneToMany(
             mappedBy = "parentComment",
             fetch = FetchType.LAZY
     )
     private List<Comment> subComments;
+
 }
