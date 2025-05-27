@@ -12,7 +12,7 @@ public class CommonApplication {
 	public static void main(String[] args) {
 		// .env 파일 로드
 		Dotenv dotenv = Dotenv.configure()
-				.directory("./")  // 루트 디렉토리의 .env 파일
+				.directory(System.getProperty("user.dir"))  // 프로젝트 루트 디렉토리
 				.ignoreIfMissing()
 				.load();
 

@@ -1,6 +1,7 @@
 package com.antmen.antwork.common.service;
 
 import com.antmen.antwork.common.api.request.BoardRequestDto;
+import com.antmen.antwork.common.api.response.BoardListResponseDto;
 import com.antmen.antwork.common.domain.entity.User;
 import com.antmen.antwork.common.infra.repository.UserRepository;
 import org.springframework.http.HttpStatus;
@@ -11,6 +12,7 @@ import com.antmen.antwork.common.domain.entity.Board;
 import com.antmen.antwork.common.infra.repository.BoardRepository;
 import com.antmen.antwork.common.service.mapper.BoardMapper;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.transaction.annotation.Transactional;
@@ -27,13 +29,15 @@ public class BoardService {
     @Transactional
     public BoardResponseDto boardWrite(String boardType, BoardRequestDto boardRequestDto, Long userId) {
         User user = userRepository.findById(userId).get();
-        Board newBoard = boardRepository.save(boardMapper.toEntity(boardRequestDto, boardType, user));
-        return boardMapper.toResponseDto(newBoard);
+        Board newBoard = boardMapper.toEntity(boardRequestDto, boardType, user);
+//        newBoard.setBoardCreatedAt(LocalDateTime.now());
+//        newBoard.setBoardModifiedAt(LocalDateTime.now());
+        return boardMapper.toResponseDto(boardRepository.save(newBoard));
     }
 
     @Transactional(readOnly = true)
-    public List<BoardResponseDto> boardReadList(String boardType) {
-        return boardRepository.findAllByBoardType(boardType).stream().map(boardMapper::toResponseDto).toList();
+    public List<BoardListResponseDto> boardReadList(String boardType) {
+        return boardRepository.findAllByBoardType(boardType).stream().map(boardMapper::toListResponseDto).toList();
     }
 
     @Transactional(readOnly = true)

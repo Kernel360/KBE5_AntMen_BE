@@ -3,6 +3,8 @@ package com.antmen.antwork.common.domain.entity;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.ColumnDefault;
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.LocalDateTime;
 
@@ -31,10 +33,12 @@ public class Board {
     @Column(nullable = false)
     private String boardContent;
 
-    @Column(nullable = false, updatable = false)
+//    @CreationTimestamp
+    @Column(name = "board_created_at", nullable = false, updatable = false)
     private LocalDateTime boardCreatedAt;
 
-    @Column(nullable = false)
+//    @UpdateTimestamp
+    @Column(name = "board_modified_at", nullable = false)
     private LocalDateTime boardModifiedAt;
 
     @Column(nullable = false)
@@ -44,4 +48,12 @@ public class Board {
     @Column(nullable = false)
     @ColumnDefault("false")
     private Boolean boardIsDeleted;
+
+    @PrePersist
+    public void prePersist() {
+        this.boardCreatedAt = (this.boardCreatedAt == null) ? LocalDateTime.now() : this.boardCreatedAt;
+        this.boardModifiedAt = (this.boardModifiedAt == null) ? LocalDateTime.now() : this.boardModifiedAt;
+        this.isPinned = (this.isPinned == null) ? false : this.isPinned;
+        this.boardIsDeleted = (this.boardIsDeleted == null) ? false : this.boardIsDeleted;
+    }
 }
