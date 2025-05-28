@@ -7,6 +7,7 @@ import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Entity
 @Table(name = "board")
@@ -49,11 +50,7 @@ public class Board {
     @ColumnDefault("false")
     private Boolean boardIsDeleted;
 
-    @PrePersist
-    public void prePersist() {
-        this.boardCreatedAt = (this.boardCreatedAt == null) ? LocalDateTime.now() : this.boardCreatedAt;
-        this.boardModifiedAt = (this.boardModifiedAt == null) ? LocalDateTime.now() : this.boardModifiedAt;
-        this.isPinned = (this.isPinned == null) ? false : this.isPinned;
-        this.boardIsDeleted = (this.boardIsDeleted == null) ? false : this.boardIsDeleted;
-    }
+    @OneToMany(mappedBy = "board", fetch = FetchType.LAZY)
+    private List<Comment> comments;
+
 }

@@ -3,6 +3,7 @@ package com.antmen.antwork.common.service;
 import com.antmen.antwork.common.api.request.BoardRequestDto;
 import com.antmen.antwork.common.api.response.BoardListResponseDto;
 import com.antmen.antwork.common.domain.entity.User;
+import com.antmen.antwork.common.infra.repository.BoardRepositoryCustom;
 import com.antmen.antwork.common.infra.repository.UserRepository;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -37,16 +38,19 @@ public class BoardService {
 
     @Transactional(readOnly = true)
     public List<BoardListResponseDto> boardReadList(String boardType) {
-        return boardRepository.findAllByBoardType(boardType).stream().map(boardMapper::toListResponseDto).toList();
+        return boardRepository.findAllByBoardType(boardType)
+                .stream().map(boardMapper::toListResponseDto)
+                .toList();
     }
 
     @Transactional(readOnly = true)
     public BoardResponseDto boardRead(Long boardId) {
-        Board board = boardRepository.findById(boardId)
+        // 게시글과 댓글, 대댓글을 함께 조회 (QueryDSL 사용)
+        Board board = boardRepository.findByIdWithCommentsAndSubComments(boardId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "게시글을 찾을 수 없습니다."));
 
         if (board.getBoardIsDeleted()){
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "게시글을 찾을 수 없습니다.");
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "삭제된 게시글 입니다.");
         }
 
         return boardMapper.toResponseDto(board);
@@ -68,6 +72,7 @@ public class BoardService {
         board.setBoardTitle(boardRequestDto.getBoardTitle());
         board.setBoardContent(boardRequestDto.getBoardContent());
         board.setIsPinned(boardRequestDto.getBoardIsPinned());
+        board.setBoardModifiedAt(LocalDateTime.now());
 
         return boardMapper.toResponseDto(board);
     }

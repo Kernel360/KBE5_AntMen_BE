@@ -7,6 +7,6 @@ import org.springframework.stereotype.Repository;
 import java.util.List;
 
 @Repository
-public interface BoardRepository extends JpaRepository<Board, Long> {
-    public List<Board> findAllByBoardType(String boardType);
+public interface BoardRepository extends JpaRepository<Board, Long>, BoardRepositoryCustom {
+
 }
