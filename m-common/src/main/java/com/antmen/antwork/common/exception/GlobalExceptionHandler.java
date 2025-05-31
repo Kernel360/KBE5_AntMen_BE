@@ -1,4 +1,4 @@
-package com.antmen.antwork.common.domain.exception;
+package com.antmen.antwork.common.exception;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
