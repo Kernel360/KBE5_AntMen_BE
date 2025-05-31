@@ -4,6 +4,7 @@ import com.antmen.antwork.common.api.request.ReservationRequestDto;
 import com.antmen.antwork.common.api.response.ReservationResponseDto;
 import com.antmen.antwork.common.domain.constant.ReservationConstants;
 import com.antmen.antwork.common.domain.entity.*;
+import com.antmen.antwork.common.domain.entity.*;
 import com.antmen.antwork.common.domain.exception.NotFoundException;
 import com.antmen.antwork.common.infra.repository.*;
 import com.antmen.antwork.common.service.mapper.ReservationMapper;
@@ -25,15 +26,6 @@ public class ReservationService {
     private final CategoryOptionRepository categoryOptionRepository;
     private final ReservationOptionRepository reservationOptionRepository;
 
-    private static final Set<String> VALID_STATUS = Set.of(
-            ReservationConstants.STATUS_WAITING,
-            ReservationConstants.STATUS_MATCHING,
-            ReservationConstants.STATUS_PAY,
-            ReservationConstants.STATUS_DONE,
-            ReservationConstants.STATUS_CANCEL,
-            ReservationConstants.STATUS_ERROR
-    );
-
     private static final short BASE_DURATION = 1;
     private static final int HOURLY_AMOUNT = 20000;
 
@@ -44,7 +36,7 @@ public class ReservationService {
     public ReservationResponseDto createReservation(ReservationRequestDto requestDto) {
 
         User customer = userRepository.findById(requestDto.getCustomerId())
-                .orElseThrow(()->new NotFoundException("해당 유저를 찾을 수 없습니다"));
+                .orElseThrow(() -> new NotFoundException("해당 유저를 찾을 수 없습니다"));
 
         Category category = categoryRepository.findById(requestDto.getCategoryId())
                 .orElseThrow(()->new NotFoundException("해당 카테고리가 존재하지 않습니다."));
@@ -109,12 +101,13 @@ public class ReservationService {
      */
     @Transactional
     public void changeStatus(Long id, String status) {
-        if (!VALID_STATUS.contains(status)) {
+        if (!ReservationStatus.isValidCode(status)) {
             throw new IllegalArgumentException("유효하지 않은 예약 상태입니다.");
         }
 
         Reservation reservation = reservationRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("예약을 찾을 수 없습니다."));
+        reservation.setReservationStatus(ReservationStatus.fromCode(status));
 
         reservation.setReservationStatus(status);
         reservationRepository.save(reservation);
@@ -132,8 +125,7 @@ public class ReservationService {
 
         Reservation reservation = reservationRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("예약을 찾을 수 없습니다."));
-
-        reservation.setReservationStatus(ReservationConstants.STATUS_CANCEL);
+        reservation.setReservationStatus(ReservationStatus.CANCEL);
         reservation.setReservationCancelReason(cancelReason);
         reservationRepository.save(reservation);
     }
