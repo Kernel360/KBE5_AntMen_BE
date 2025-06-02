@@ -5,6 +5,7 @@ plugins {
 }
 
 dependencies {
+	implementation project(":m-customer") // customer 모듈 참조
 	implementation 'org.springframework.boot:spring-boot-starter-web'
 	implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
 	compileOnly 'org.projectlombok:lombok'

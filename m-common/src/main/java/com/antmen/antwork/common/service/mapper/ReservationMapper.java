@@ -1,14 +1,11 @@
 package com.antmen.antwork.common.service.mapper;
 
-import com.antmen.antwork.common.domain.entity.ReservationOption;
+import com.antmen.antwork.common.domain.entity.*;
 import org.springframework.stereotype.Component;
 import lombok.RequiredArgsConstructor;
 
 import com.antmen.antwork.common.api.request.ReservationRequestDto;
 import com.antmen.antwork.common.api.response.ReservationResponseDto;
-import com.antmen.antwork.common.domain.entity.Category;
-import com.antmen.antwork.common.domain.entity.Reservation;
-import com.antmen.antwork.common.domain.entity.User;
 
 import java.util.List;
 
@@ -36,8 +33,8 @@ public class ReservationMapper {
     }
 
     public ReservationResponseDto toDto(Reservation entity,
-                                        List<ReservationOption> options
-    ) {
+                                        List<ReservationOption> options,
+                                        short recommendDuration) {
         List<Long> optionIds = options.stream()
                 .map(opt -> opt.getCategoryOption().getCoId())
                 .toList();
@@ -57,10 +54,16 @@ public class ReservationMapper {
                 .categoryName(entity.getCategory() != null ? entity.getCategory().getCategoryName() : null)
                 .reservationDuration(entity.getReservationDuration())
                 .managerAcceptTime(entity.getManagerAcceptTime())
-                .reservationStatus(entity.getReservationStatus())
+                .reservationStatus(entity.getReservationStatus().name()) // "WAITING", "MATCHING"
                 .reservationCancelReason(entity.getReservationCancelReason())
                 .reservationMemo(entity.getReservationMemo())
                 .reservationAmount(entity.getReservationAmount())
+                .recommendDuration(recommendDuration)
                 .build();
+    }
+
+    public ReservationResponseDto toDto(Reservation reservation,
+                                        List<ReservationOption> options) {
+        return toDto(reservation, options, (short) 0);
     }
 }
