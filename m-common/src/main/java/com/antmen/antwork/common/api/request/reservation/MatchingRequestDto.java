@@ -1,6 +1,5 @@
 package com.antmen.antwork.common.api.request.reservation;
 
-import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;

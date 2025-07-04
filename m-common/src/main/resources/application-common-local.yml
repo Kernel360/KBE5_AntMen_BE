@@ -7,6 +7,9 @@ spring:
     multipart:
       max-file-size: 20MB
       max-request-size: 20MB
+  jackson:
+    serialization:
+      write-date-keys-as-timestamps: false
   datasource:
     url: ${SPRING_DATABASE_URL}
     username: ${MYSQL_USERNAME}

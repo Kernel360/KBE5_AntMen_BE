@@ -47,16 +47,16 @@ public class BoardService {
     }
 
     @Transactional(readOnly = true)
-    public PostPageDto boardReadList(String boardType, Long userId, String name, String sortby, Pageable pageable) {
+    public PostPageDto boardReadList(String boardType, Long userId, String name, String sortBy, Pageable pageable) {
         List<BoardListResponseDto> pinned = new ArrayList<>();
         Page<BoardListResponseDto> normal = null;
 
         pinned = boardRepository.findAllByBoardTypeAndIsPinnedIsTrue(boardType);
 
         if (boardType.endsWith("notice")) {
-            normal = boardRepository.searchBoardsWithPaging(boardType, null, name, sortby, pageable);
+            normal = boardRepository.searchBoardsWithPaging(boardType, null, name, sortBy, pageable);
         } else {
-            normal = boardRepository.searchBoardsWithPaging(boardType, userId, name, sortby, pageable);
+            normal = boardRepository.searchBoardsWithPaging(boardType, userId, name, sortBy, pageable);
         }
 
         return PostPageDto.builder()
