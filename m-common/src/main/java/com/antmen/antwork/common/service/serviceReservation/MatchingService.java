@@ -20,6 +20,7 @@ import com.antmen.antwork.common.infra.repository.reservation.MatchingRepository
 import com.antmen.antwork.common.infra.repository.reservation.ReviewRepository;
 import com.antmen.antwork.common.infra.repository.reservation.ReviewSummaryRepository;
 import com.antmen.antwork.common.service.AlertService;
+import com.antmen.antwork.common.service.RedisService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -29,6 +30,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -45,6 +47,7 @@ public class MatchingService {
     private final MatchingRecommendationSettingsService matchingRecommendationSettingsService;
     private final ReviewRepository reviewRepository;
     private final ReviewSummaryRepository reviewSummaryRepository;
+    private final RedisService redisService;
 
     // 매칭 생성
     @Transactional
@@ -686,33 +689,60 @@ public class MatchingService {
         CustomerAddress address = customerAddressRepository.findById(addressId)
                 .orElseThrow(() -> new NotFoundException("고객 주소가 존재하지 않습니다."));
         if (address.getCustomerLatitude() == null || address.getCustomerLongitude() == null) {
-            throw new NotFoundException("고객 주소에 위경도가 존재하지 않습니다.");}
+            throw new NotFoundException("고객 주소에 위경도가 존재하지 않습니다.");
+        }
 
-        double lat = address.getCustomerLatitude();
-        double lng = address.getCustomerLongitude();
+        double customerLat = address.getCustomerLatitude();
+        double customerLng = address.getCustomerLongitude();
         double rangeKm = 20.0;
 
-        Map<Long, User> userMap = managers.stream().collect(Collectors.toMap(User::getUserId, Function.identity()));
-        List<ManagerDetail> managerDetails = managerDetailRepository.findByUserIdIn(userMap.keySet().stream().toList());
-        
-        // 리뷰 데이터 일괄 조회
-        List<Long> managerIds = userMap.keySet().stream().toList();
+        Map<Long, User> userMap = managers.stream()
+                .collect(Collectors.toMap(User::getUserId, Function.identity()));
+        List<Long> managerIds = new ArrayList<>(userMap.keySet());
+
+        // 🔍 성능 테스트 시작
+        long startTime = System.currentTimeMillis();
+        AtomicInteger cacheHit = new AtomicInteger();
+
         Map<Long, ReviewSummary> reviewSummaryMap = getReviewSummaryForAllManagers(managerIds);
 
-        return managerDetails.stream()
-                .filter(d -> d.getManagerLatitude() != null && d.getManagerLongitude() != null)
-                .map(d -> {
-                    double distance = calculateDistance(lat, lng, d.getManagerLatitude(), d.getManagerLongitude());
+        List<MatchingManagerListResponseDto> result = managerIds.stream()
+                .map(managerId -> {
+                    Optional<double[]> cachedLocation = redisService.getManagerLocation(managerId);
+
+                    double lat, lng;
+                    if (cachedLocation.isPresent()) {
+                        double[] location = cachedLocation.get();
+                        lat = location[0];
+                        lng = location[1];
+                        cacheHit.incrementAndGet();
+                    } else {
+                        ManagerDetail detail = managerDetailRepository.findByUserId(managerId).orElse(null);
+                        if (detail == null || detail.getManagerLatitude() == null || detail.getManagerLongitude() == null) {
+                            return null;
+                        }
+                        lat = detail.getManagerLatitude();
+                        lng = detail.getManagerLongitude();
+                        redisService.setManagerLocation(managerId, lat, lng);
+                    }
+
+                    double distance = calculateDistance(customerLat, customerLng, lat, lng);
                     if (distance > rangeKm) return null;
 
-                    User user = userMap.get(d.getUserId());
+                    User user = userMap.get(managerId);
                     if (user == null) return null;
-                    
-                    ReviewSummary reviewSummary = reviewSummaryMap.get(d.getUserId());
+
+                    ReviewSummary reviewSummary = reviewSummaryMap.get(managerId);
                     return MatchingManagerListResponseDto.toDto(user, distance, reviewSummary);
                 })
                 .filter(Objects::nonNull)
                 .toList();
+
+        long elapsed = System.currentTimeMillis() - startTime;
+        System.out.println("⏱ 처리 시간: " + elapsed + "ms");
+        System.out.println("✅ Redis 캐시 HIT: " + cacheHit.get() + " / " + managerIds.size());
+
+        return result;
     }
 
     private List<MatchingManagerListResponseDto> getFilteredManagers(LocalDate date, LocalTime time, int duration, Long addressId, boolean useDistanceFilter, Long reservationId, boolean excludeAlreadyMatched) {
